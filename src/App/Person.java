@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class Person {
 
-    private int id, actualParterPriority;
+    private int id, actualParterPriority,  posX, posY;
     private String gender, state;
     private String destiny;
     private String coordinates;
@@ -54,6 +54,9 @@ public class Person {
     }
 
     public void setPosition(int x, int y){
+
+        posX = x;
+        posY = y;
         coordinates = x + ";" + y;
     }
 
@@ -130,5 +133,13 @@ public class Person {
         if (d == 2) return 1;
         if (d == -2) return -1;
         else return 0;
+    }
+
+    public int getX(){
+        return this.posX;
+    }
+
+    public int getY(){
+        return this.posY;
     }
 }

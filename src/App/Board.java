@@ -1,6 +1,9 @@
 package App;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 
 public class Board {
 
@@ -8,15 +11,20 @@ public class Board {
     private String coordinates[][];
     private ArrayList <Person> men = new ArrayList<>();
     private ArrayList <Person> women = new ArrayList<>();
+    private ArrayList <Couple> couples = new ArrayList<>();
+    private StringMatching s = new StringMatching();
+    private int couplesN;
 
 
     //CRIA MAPA   (CAMPO + BARREIRAS + POPULAÇÃO)
-    public Board (int line, int column, int couples, int registries){
+    public Board (int line, int column, int couplesN, int registries){
         this.line = line;
         this.column = column;
+        this.couplesN = couplesN;
         coordinates = mountEmptyBoard(line, column);
         insertRegistries(registries);
-        generatePopulation(couples);
+        generatePopulation(couplesN);
+        generatePrioritiesList();
     }
 
     //MONTA MAPA INICIAL SEM ESTRUTURAS
@@ -86,18 +94,37 @@ public class Board {
     //GERA POPULAÇÃO INICIAL (A MODIFICAR)
     private void generatePopulation(int couples) {
 
-        Person p;
-        int pop = couples * 2;
+        generatePopulation(couples, " M ", men);
+        generatePopulation(couples, " F ", women);
 
-        for (int i = 0; i < pop; i+=2) {
-            p = new Person(i, " M ", "Single");
-            men.add(p);
-            insertOnBoard(p);
-            p = new Person(i + 1, " F ", "Single");
-            women.add(p);
+    }
+
+    private void generatePopulation(int couples, String s, ArrayList<Person> a){
+        for (int i = 1; i <= couples; i++) {
+            Person p = new Person(i, s,"Single");
+            a.add(p);
             insertOnBoard(p);
         }
+    }
 
+    private void generatePrioritiesList(){
+
+        ArrayList<Integer> preferenceOrder = new ArrayList<Integer>();
+        for (int i = 1; i <= couplesN * 2; i++) {
+            preferenceOrder.add(i);
+        }
+
+        for (Person p: men
+             ) {
+            Collections.shuffle(preferenceOrder);
+            p.setPreferences(preferenceOrder);
+        }
+
+        for (Person p: women
+             ) {
+            Collections.shuffle(preferenceOrder);
+            p.setPreferences(preferenceOrder);
+        }
     }
 
     //INSERE A POPULAÇÃO INICIAL ALEATORIAMENTE NO MAPA
@@ -126,6 +153,7 @@ public class Board {
     //IMPRIME O MAPA EM SEU ETADO ATUAL
     public boolean printBoard(){
 
+        System.out.println("*****************");
         for (int x = 0; x < line; x++) {
             for (int y = 0; y < column; y++) {
 
@@ -152,6 +180,7 @@ public class Board {
         int xPos, yPos, newX, newY;
         movePopulation(men);
         movePopulation(women);
+        RemoveMarriedMan();
 
     }
 
@@ -164,18 +193,23 @@ public class Board {
         for (Person p: population
                 ) {
             pos = p.getCoordinates();
-            if(Men(p)) objective = objectiveFound(p);
-            String parts [] = pos.split(";");
-            xPos = Integer.parseInt(parts[0]);
-            yPos = Integer.parseInt(parts[1]);
-            if(!objective){
-                pos = p.RandomMove();
-                MovingPerson(p, xPos, yPos, pos);
+            if(Men(p)) {
+                objective = objectiveFound(p);
+                Interact(p);
             }
-            else{
-                pos = p.MoveToObjective(p.getDestiny());
-                if(!MovingPerson(p, xPos, yPos, pos)){
-                    //Aqui vai o para o algoritmo A*
+            if(p.getState().equals("Single")){
+                String parts [] = pos.split(";");
+                xPos = Integer.parseInt(parts[0]);
+                yPos = Integer.parseInt(parts[1]);
+                if(!objective){
+                    pos = p.RandomMove();
+                    MovingPerson(p, xPos, yPos, pos);
+                }
+                else{
+                    pos = p.MoveToObjective(p.getDestiny());
+                    if(!MovingPerson(p, xPos, yPos, pos)){
+                        //Aqui vai o para o algoritmo A*
+                    }
                 }
             }
             //APENAS PARA VISUALIZAR A MOVIMENTAÇÃO.
@@ -302,5 +336,118 @@ public class Board {
 
     private boolean BoardLimitsY(int y){
         return (y >= 0 && y < line);
+    }
+
+    private void Interact(Person p){
+        String objective1 = " F ";
+        String objective2 = " C ";
+        int x = p.getX();
+        int y = p.getY();
+        for (int i = y - 1 ; i <= y + 1 ; i++) {
+            if(BoardLimitsY(i)) {
+                for (int j = x - 1; j <= x + 1; j++) {
+                    if(BoardLimitsX(j)) {
+                            if (coordinates[i][j].equals(objective1)) {
+                                String wCoordinates = j + ";" + i;
+                                Person w = SearchWoman(wCoordinates);
+                                if(p.getState().equals("Single")){
+                                    if (s.matches(p, w)) {
+                                        generateCouple(p, w);
+                                        coordinates[y][x] = " C ";;
+                                        x = w.getX();
+                                        y = w.getY();
+                                        coordinates[y][x] = " . ";
+                                        printBoard();
+                                        return;
+                                    }
+                                }
+                            }
+                            else {
+                                if (coordinates[i][j].equals(objective2)) {
+                                    String cCoordinates = j + ";" + i;
+                                    Couple c = SearchCouple(cCoordinates);
+                                    try{
+                                        Person w = c.getWife();
+                                        if (s.matches(p, w)) {
+                                            Person outsider = dissolveCouple(c);
+                                            coordinates[y][x] = " C ";
+                                            String parts[] = cCoordinates.split(";");
+                                            x = Integer.parseInt(parts[0]);
+                                            y = Integer.parseInt(parts[1]);
+                                            outsider.setPosition(x, y);
+                                            outsider.setStatus("Single");
+                                            outsider.setActualParterPriority(0);
+                                            coordinates[y][x] = " M ";
+                                            generateCouple(p, w);
+                                            printBoard();
+                                        }
+
+                                    } catch (NullPointerException e){
+                                        e.getMessage();
+
+                                    }
+
+
+                                }
+
+                            }
+
+
+                    }
+                }
+            }
+        }
+        return;
+    }
+
+    private Person dissolveCouple(Couple c) {
+        Person p = c.getHusband();
+        couples.remove(c);
+        return p;
+    }
+
+    private Couple SearchCouple(String cCoordinates) {
+        for (Couple c: couples
+             ) {
+            if(c.getCoordinates().equals(cCoordinates)){
+                return c;
+            }
+
+        }
+        return null;
+    }
+
+    private void generateCouple(Person p, Person w) {
+        Couple c = new Couple(p, w);
+        p.setStatus("Married");
+        w.setStatus("Married");
+        c.setCoordinates(p.getCoordinates());
+//        p.setPosition(-1,-1);
+//        w.setPosition(-1,-1);
+        couples.add(c);
+        //men.remove(p);
+        women.remove(w);
+    }
+
+    private void RemoveMarriedMan(){
+        Iterator<Person> list = men.iterator();
+
+        while(list.hasNext()){
+            Person p = list.next();
+            if(p.getState().equals("Married")){
+                list.remove();
+            }
+        }
+
+
+
+    }
+
+    private Person SearchWoman(String wCoordinates) {
+        for (Person p: women
+             ) {
+            if (p.getCoordinates().equals(wCoordinates))return p;
+        }
+        return null;
     }
 }
