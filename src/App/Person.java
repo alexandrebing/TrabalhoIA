@@ -6,8 +6,8 @@ public class Person {
 
     private int id, actualParterPriority;
     private String gender, state;
-    private int[][] destiny;
-    String coordinates;
+    private String destiny;
+    private String coordinates;
     private ArrayList<Integer> preferences = new ArrayList<>();
 
     public Person(int id, String gender, String state) {
@@ -19,6 +19,10 @@ public class Person {
 
     public String getGender() {
         return gender;
+    }
+
+    public String Identification(){
+        return this.gender + this.id;
     }
 
     public int getId() {
@@ -33,6 +37,14 @@ public class Person {
         return actualParterPriority;
     }
 
+    public String getDestiny() {
+        return destiny;
+    }
+
+    public void setDestiny(String destiny) {
+        this.destiny = destiny;
+    }
+
     public void setActualParterPriority(int actualParterPriority) {
         this.actualParterPriority = actualParterPriority;
     }
@@ -45,7 +57,7 @@ public class Person {
         coordinates = x + ";" + y;
     }
 
-    public String Move(){
+    public String RandomMove(){
 
         int n = (int)(Math.random() * 4);
         return moveSet(n);
@@ -95,4 +107,28 @@ public class Person {
         this.state = newStatus;
     }
 
+    public String MoveToObjective(String s) {
+
+        String pos [] = this.coordinates.split(";");
+        int x = Integer.parseInt(pos[0]);
+        int y = Integer.parseInt(pos[1]);
+        pos = this.destiny.split(";");
+        int destX = Integer.parseInt(pos[0]);
+        int destY = Integer.parseInt(pos[1]);
+
+        int diffX = destX - x; //Será +2, -2 ou 0
+        int diffY = destY - y; //Será +2, -2 ou 0
+
+        diffX = correctMove(diffX);
+        diffY = correctMove(diffY);
+
+        return diffX + ";" + diffY;
+
+    }
+
+    private int correctMove(int d) {
+        if (d == 2) return 1;
+        if (d == -2) return -1;
+        else return 0;
+    }
 }

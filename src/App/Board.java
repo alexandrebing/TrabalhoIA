@@ -107,7 +107,7 @@ public class Board {
         while(!found) {
             randomY = (int) ((Math.random() * line) + 1) - 1 ;
             randomX = (int) ((Math.random() * column) + 1) - 1 ;
-            if (emptySpace(randomY,randomX)){
+            if (emptySpace(randomX,randomY)){
                 coordinates[randomY][randomX] = p.getGender();
                 p.setPosition(randomX, randomY);
                 found = true;
@@ -117,7 +117,7 @@ public class Board {
     }
 
     //VERIFICA SE O ESPAÇO É VÁLIDO
-    private boolean emptySpace(int y, int x){
+    private boolean emptySpace(int x, int y){
         if (coordinates[y][x].equals(" . "))
             return true;
         return false;
@@ -160,27 +160,62 @@ public class Board {
         String pos;
         int xPos;
         int yPos;
-        int newX;
-        int newY;
+        boolean objective = false;
         for (Person p: population
                 ) {
             pos = p.getCoordinates();
+            if(Men(p)) objective = objectiveFound(p);
             String parts [] = pos.split(";");
             xPos = Integer.parseInt(parts[0]);
             yPos = Integer.parseInt(parts[1]);
-            pos = p.Move();
-            parts = pos.split(";");
-            newX = xPos + Integer.parseInt(parts[0]);
-            newX = checkLimits(newX, column);
-            newY = yPos + Integer.parseInt(parts[1]);
-            newY = checkLimits(newY, line);
-            if(emptySpace(newX, newY)) {
-                coordinates[yPos][xPos] = " . ";
-                coordinates[newY][newX] = p.getGender();
-                p.setPosition(newX, newY);
+            if(!objective){
+                pos = p.RandomMove();
+                MovingPerson(p, xPos, yPos, pos);
             }
+            else{
+                pos = p.MoveToObjective(p.getDestiny());
+                if(!MovingPerson(p, xPos, yPos, pos)){
+                    //Aqui vai o para o algoritmo A*
+                }
+            }
+            //APENAS PARA VISUALIZAR A MOVIMENTAÇÃO.
+            System.out.print("\033[H\033[2J");
+            System.out.flush();
+            printBoard();
+            try {
 
+                Thread.sleep(100);
+
+            }
+            catch (InterruptedException e){
+
+                Thread.currentThread().interrupt();
+
+            }
+            //FIM VISUALIZAÇÃO.
         }
+    }
+
+    private boolean Men(Person p) {
+        if(p.getGender() == " M ") return true;
+        return false;
+    }
+
+    private boolean MovingPerson(Person p, int x, int y, String pos){
+        int newX, newY;
+        String parts [] = pos.split(";");
+        newX = x + Integer.parseInt(parts[0]);
+        newX = checkLimits(newX, column);
+        newY = y + Integer.parseInt(parts[1]);
+        newY = checkLimits(newY, line);
+        if(emptySpace(newX, newY)) {
+            coordinates[y][x] = " . ";
+            coordinates[newY][newX] = p.getGender();
+            p.setPosition(newX, newY);
+            return true;
+        }
+        return false;
+
     }
 
     //GARANTE QUE UMA NOVA COORDENADA NÃO VAI EXCEDER O TAMANHO DA MATRIZ OU TER VALOR NEGATIVO.
@@ -189,5 +224,83 @@ public class Board {
         if (n < 0) return 0;
         if (n > size - 1) return size - 1;
         else return n;
+    }
+
+    //Metodo que pega os arredores de uma pessoa e retorna estes valores.
+    private boolean objectiveFound(Person p){
+
+        String part [] = p.getCoordinates().split(";");
+        int xCoord = Integer.parseInt(part[0]);
+        int yCoord = Integer.parseInt(part[1]);
+        String objective;
+        if(p.getGender().equals(" M ")){
+            objective = " F ";
+        }
+        else{
+            objective = " M ";
+        }
+
+        //DEFINIR AÇÃO COM BASE NOS VIZINHOS
+
+        //DEFINIR DIREÇÃO COM BASE NOS VIZINHOS DOS VIZINHOS;
+
+        if(CheckLine(p, objective, yCoord - 2, xCoord, true)){
+            return true;
+        }
+
+        if(CheckLine(p, objective, xCoord + 2, yCoord, false)){
+            return true;
+
+        }
+
+       if( CheckLine(p, objective, yCoord + 2, xCoord, true)){
+            return true;
+
+       }
+
+        if (CheckLine(p, objective, xCoord - 2, yCoord, false)){
+            return true;
+        }
+        return false;
+    }
+
+
+    //PROBLEMA NESTE MÉTODO
+    private boolean CheckLine(Person p, String objective, int constant, int variable, boolean x) {
+        for(int i = variable - 2; i <= variable +2; i++){
+            //X é a variável
+            if(x) {
+                if (!BoardLimitsY(constant)) return false; //Se a constante é inválida nem checo a variável
+                if (BoardLimitsX(i)) {
+                    if (coordinates[constant][i].equals(objective)) {
+                        String destiny = i + ";" + constant;
+                        p.setDestiny(destiny);
+                        return true;
+                    }
+                }
+            }
+                //y é a variável
+                else{
+                    if(!BoardLimitsX(constant)) return false;
+                    if(BoardLimitsY(i)){
+                        if (coordinates[i][constant].equals(objective)){
+                            String destiny = constant + ";" + i;
+                            p.setDestiny(destiny);
+                            return true;
+                        }
+                    }
+                }
+            }
+        return false;
+    }
+
+    private boolean BoardLimitsX(int x){
+
+        return (x >= 0 && x < column);
+
+    }
+
+    private boolean BoardLimitsY(int y){
+        return (y >= 0 && y < line);
     }
 }
