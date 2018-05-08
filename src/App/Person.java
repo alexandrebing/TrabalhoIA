@@ -135,6 +135,18 @@ public class Person {
         else return 0;
     }
 
+    public void setPreferenceList(String s){
+        String pref [] = s.split("  ");
+        for (int i = 0; i < pref.length - 1 ; i++) {
+            int n = Integer.parseInt(pref[i]);
+            preferences.add(n);
+        }
+        int last = pref.length -1;
+            int invalidSpace = pref[last].length() - 1;
+            int n = Integer.parseInt(pref[last].substring(0,invalidSpace));
+            preferences.add(n);
+    }
+
     public int getX(){
         return this.posX;
     }

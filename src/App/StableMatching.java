@@ -2,7 +2,7 @@ package App;
 
 import java.util.ArrayList;
 
-public class StringMatching {
+public class StableMatching {
 
 
     public boolean matches(Person m, Person f) {

@@ -1,30 +1,31 @@
 package App;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 
 public class Board {
 
     private int line, column;
     private String coordinates[][];
+    private ArrayList<String> lines;
     private ArrayList <Person> men = new ArrayList<>();
     private ArrayList <Person> women = new ArrayList<>();
     private ArrayList <Couple> couples = new ArrayList<>();
-    private StringMatching s = new StringMatching();
-    private int couplesN;
+    private StableMatching s = new StableMatching();
+    private int couplesNum;
 
 
     //CRIA MAPA   (CAMPO + BARREIRAS + POPULAÇÃO)
-    public Board (int line, int column, int couplesN, int registries){
-        this.line = line;
-        this.column = column;
-        this.couplesN = couplesN;
+    public Board (int couples, int registries, ArrayList<String> lines, String offset){
+        this.line = couples;
+        this.column = couples;
+        this.couplesNum = couples;
+        this.lines = lines;
         coordinates = mountEmptyBoard(line, column);
         insertRegistries(registries);
-        generatePopulation(couplesN);
-        generatePrioritiesList();
+        generatePopulation(couplesNum, lines, offset);
+        System.out.println("Done");
+        //generatePrioritiesList();
     }
 
     //MONTA MAPA INICIAL SEM ESTRUTURAS
@@ -40,91 +41,55 @@ public class Board {
 
     //INSERE AS BARREIRAS (FALTA CARTÓRIO)
     private void insertRegistries(int n) {
-        boolean validColumn = false;
-        int randomY, randomX = 0;
-        int index = 0;
-        int usedColumns[] = new int[column];
-        for (int i = 0; i < n ; i++) {
-            int wallSize = line/2;
-            validColumn = false;
-            randomY = ((int) (Math.random() * line + 1)) - (wallSize -1);
-            if(randomY < 0){
-                randomY = 1;
-            }
-            while(!validColumn) {
-                randomX = ((int) (Math.random() * column) + 1) - 2;
-                if (randomX < 0) {
-                    randomX = 1;
-                }
-                if (isValidColumn(randomX, usedColumns)){
-                    usedColumns[index] = randomX;
-                    index++;
-                    if (isValidColumn(randomX+1, usedColumns)){
-                        if(randomX < column - 1) {
-                            usedColumns[index] = randomX + 1;
-                            index++;
-                        }
-                    }
-                    if (isValidColumn(randomX-1, usedColumns)){
-                        if (randomX < column - 1) {
-                            usedColumns[index] = randomX - 1;
-                            index++;
-                        }
-                    }
-                    validColumn = true;
-                }
-            }
 
-            for (int j = 0; j < wallSize - 1; j++) {
-                coordinates[randomY][randomX] = "[ ]";
-                randomY ++;
+        int y = (int)(Math.random() * (couplesNum/2)) + 1;
+
+        int slots [] = generateLines(n);
+        for (int i = 0; i < n; i++) {
+            int col = slots[i];
+            for (int j = y; j < y + (couplesNum/2); j++) {
+                coordinates[col][j] = "[ ]";
             }
+            printBoard();
         }
+
     }
 
-    //VERIFICAÇÃO PARA IMPEDIR BARREIRAS NA MESMA COLUNA
-    private boolean isValidColumn(int randomX, int[] usedColumns) {
-
-        for (int i = 0; i < usedColumns.length ; i++) {
-            if (randomX == usedColumns[i]) return false;
+    private int[] generateLines(int n) {
+        int constant = couplesNum/n;
+        int var = 1;
+        int res [] = new int [n];
+        for (int i = 0; i < n ; i++) {
+            res[i] = var;
+            var += constant;
         }
-        return true;
+        return res;
     }
 
     //GERA POPULAÇÃO INICIAL (A MODIFICAR)
-    private void generatePopulation(int couples) {
+    private void generatePopulation(int couples, ArrayList<String> lines, String offset) {
 
-        generatePopulation(couples, " M ", men);
-        generatePopulation(couples, " F ", women);
-
-    }
-
-    private void generatePopulation(int couples, String s, ArrayList<Person> a){
-        for (int i = 1; i <= couples; i++) {
-            Person p = new Person(i, s,"Single");
-            a.add(p);
+        for (int i = 0; i < couplesNum; i++) {
+            String s = lines.get(i);
+            String parts [] = s.split(offset);
+            int id = Integer.parseInt(parts[0]);
+            String preferenceList = parts[1];
+            Person p = new Person(id," M ", "Single");
+            p.setPreferenceList(preferenceList);
+            men.add(p);
             insertOnBoard(p);
         }
-    }
-
-    private void generatePrioritiesList(){
-
-        ArrayList<Integer> preferenceOrder = new ArrayList<Integer>();
-        for (int i = 1; i <= couplesN * 2; i++) {
-            preferenceOrder.add(i);
+        for (int i = couplesNum + 1; i < (couplesNum * 2) ; i++) {
+            String s = lines.get(i);
+            String parts [] = s.split(offset);
+            int id = Integer.parseInt(parts[0]);
+            String preferenceList = parts[1];
+            Person p = new Person(id," F ", "Single");
+            p.setPreferenceList(preferenceList);
+            women.add(p);
+            insertOnBoard(p);
         }
 
-        for (Person p: men
-             ) {
-            Collections.shuffle(preferenceOrder);
-            p.setPreferences(preferenceOrder);
-        }
-
-        for (Person p: women
-             ) {
-            Collections.shuffle(preferenceOrder);
-            p.setPreferences(preferenceOrder);
-        }
     }
 
     //INSERE A POPULAÇÃO INICIAL ALEATORIAMENTE NO MAPA
@@ -157,8 +122,7 @@ public class Board {
         for (int x = 0; x < line; x++) {
             for (int y = 0; y < column; y++) {
 
-                String element = getQuadrant(x, y);
-                System.out.printf("%s", element);
+                System.out.printf("%s", coordinates[y][x]);
             }
             System.out.println();
 
@@ -167,21 +131,82 @@ public class Board {
         return true;
     }
 
-    //RETORNA COORDENADAS NA FORMA DE STRING
-    private String getQuadrant(int x, int y) {
+    //MOVIMENTA A POPULAÇÃO
+    public void movePopulation() {
+        moveCouple(couples);
+        movePopulation(men);
+        RemoveMarriedMan();
+        movePopulation(women);
 
-        return coordinates [x][y];
 
     }
 
-    //MOVIMENTA A POPULAÇÃO
-    public void movePopulation() {
+    private void moveCouple(ArrayList<Couple> couples) {
         String pos;
-        int xPos, yPos, newX, newY;
-        movePopulation(men);
-        movePopulation(women);
-        RemoveMarriedMan();
+        int xPos;
+        int yPos;
+        boolean objective = false;
+        for (Couple c: couples
+                ) {
+            pos = c.getCoordinates();
+            Person p = c.getHusband();
+            xPos = c.posX();
+            yPos = c.posY();
+            p.setPosition(c.posX(), c.posY());
+            objective = objectiveFound(p);
+            if (!Interact(c)){
+                String parts [] = pos.split(";");
+                xPos = Integer.parseInt(parts[0]);
+                yPos = Integer.parseInt(parts[1]);
+                if(!objective){
+                    pos = p.RandomMove();
+                    MovingCouple(c, xPos, yPos, pos);
+                }
+                else{
+                    pos = p.MoveToObjective(p.getDestiny());
+                    if(!MovingPerson(p, xPos, yPos, pos)){
+                        //Aqui vai o para o algoritmo A*
+                    }
+                }
+            }
+            //APENAS PARA VISUALIZAR A MOVIMENTAÇÃO.
+            System.out.print("\033[H\033[2J");
+            System.out.flush();
+            printBoard();
+            try {
 
+                Thread.sleep(50);
+
+            }
+            catch (InterruptedException e){
+
+                Thread.currentThread().interrupt();
+
+            }
+            //FIM VISUALIZAÇÃO.
+        }
+
+    }
+
+    private boolean MovingCouple(Couple c, int x, int y, String pos) {
+        int newX, newY;
+        String parts [] = pos.split(";");
+        newX = x + Integer.parseInt(parts[0]);
+        newX = checkLimits(newX, column);
+        newY = y + Integer.parseInt(parts[1]);
+        newY = checkLimits(newY, line);
+        if(emptySpace(newX, newY)) {
+            coordinates[y][x] = " . ";
+            coordinates[newY][newX] = c.getInfo();
+            c.getHusband().setPosition(newX, newY);
+            c.getWife().setPosition(newX, newY);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean Interact(Couple c) {
+        return false;
     }
 
     //MOVIMENTA A POPULAÇÃO (PRIVADO E SEPARANDO POR SEXO)
@@ -218,7 +243,7 @@ public class Board {
             printBoard();
             try {
 
-                Thread.sleep(100);
+                Thread.sleep(50);
 
             }
             catch (InterruptedException e){
@@ -230,11 +255,16 @@ public class Board {
         }
     }
 
+    private void MoveCouples(){
+
+    }
+
     private boolean Men(Person p) {
         if(p.getGender() == " M ") return true;
         return false;
     }
 
+    //MOVIMENTA UMA PESSOA
     private boolean MovingPerson(Person p, int x, int y, String pos){
         int newX, newY;
         String parts [] = pos.split(";");
@@ -254,7 +284,6 @@ public class Board {
 
     //GARANTE QUE UMA NOVA COORDENADA NÃO VAI EXCEDER O TAMANHO DA MATRIZ OU TER VALOR NEGATIVO.
     private int checkLimits(int n, int size) {
-
         if (n < 0) return 0;
         if (n > size - 1) return size - 1;
         else return n;

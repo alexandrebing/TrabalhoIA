@@ -1,10 +1,9 @@
 package App;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 
-public class StringMatchingTest {
+public class StableMatchingTest {
 
     public static void main(String[] args) {
 
@@ -16,7 +15,7 @@ public class StringMatchingTest {
         Couple c;
         Person p;
         boolean unStable = true;
-        StringMatching sm = new StringMatching();
+        StableMatching sm = new StableMatching();
 
         for (int i = 0; i < coupleNumber; i++) {
             preferenceOrder.add(i+1);
