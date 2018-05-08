@@ -37,6 +37,8 @@ public class Main {
             n++;
         }
         b.printBoard();
+        System.out.println("Casais ao final da execução.");
+        b.printStatus();
     }
 
     public static void clearScreen() {

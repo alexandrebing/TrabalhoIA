@@ -103,14 +103,31 @@ public class Person {
         this.state = newStatus;
     }
 
-    public String MoveToObjective() {
+    public String MoveToObjective(Board board) {
 
-        String pos [] = this.destiny.split(";");
+        int x = posX;
+        int y = posY;
+        String pos [] = this.destiny.split("\\;");
         int destX = Integer.parseInt(pos[0]);
         int destY = Integer.parseInt(pos[1]);
 
-        int diffX = destX - posX; //Será +2, -2 ou 0
-        int diffY = destY - posY; //Será +2, -2 ou 0
+        int nextX = x - 1;
+        int nextY = y - 1;
+        double nota = heuristica(nextX,nextY,destX,destY);
+        double nota_atual = nota;
+        for(int x_atual = x - 1; x_atual < x + 2; x_atual++){
+            for(int y_atual = y - 1; y_atual < y + 2; y_atual++){
+                nota_atual = heuristica(x_atual,y_atual,destX,destY);
+                if(nota_atual < nota && board.emptySpace(x_atual,y_atual)){
+                    nextX = x_atual;
+                    nextY = y_atual;
+                    nota = nota_atual;
+                }
+            }
+        }
+
+        int diffX = nextX - x; //Será +2, -2 ou 0
+        int diffY = nextY - y; //Será +2, -2 ou 0
 
         diffX = correctMove(diffX);
         diffY = correctMove(diffY);
@@ -119,9 +136,19 @@ public class Person {
 
     }
 
+
+    public double heuristica(int XAtual, int YAtual, int XFinal, int YFinal) {
+        int deltaX = Math.abs(XAtual - XFinal);
+        int deltaY = Math.abs(YAtual - YFinal);
+
+        double res = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+        return res;
+    }
+
     private int correctMove(int d) {
-        if (d == 2) return 1;
-        if (d == -2) return -1;
+        if (d > 0) return 1;
+        if (d < 0) return -1;
         else return 0;
     }
 

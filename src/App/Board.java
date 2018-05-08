@@ -2,15 +2,28 @@ package App;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Random;
 
 public class Board {
 
+
+    private static final String ANSI_RESET = "\u001B[0m";
+    private static final String ANSI_BLACK = "\u001B[30m";
+    private static final String ANSI_RED = "\u001B[31m";
+    private static final String ANSI_GREEN = "\u001B[32m";
+    private static final String ANSI_YELLOW = "\u001B[33m";
+    private static final String ANSI_BLUE = "\u001B[34m";
+    private static final String ANSI_PURPLE = "\u001B[35m";
+    private static final String ANSI_CYAN = "\u001B[36m";
+    private static final String ANSI_WHITE = "\u001B[37m";
+
     private int line, column;
     private String coordinates[][];
-    private ArrayList<String> lines;
+    private Random rand = new Random();
     private ArrayList <Person> men = new ArrayList<>();
     private ArrayList <Person> women = new ArrayList<>();
     private ArrayList <Couple> couples = new ArrayList<>();
+    private ArrayList<String> lines, registryCoordinates = new ArrayList<>();
     private StableMatching s = new StableMatching();
     private int couplesNum;
 
@@ -22,6 +35,7 @@ public class Board {
         this.couplesNum = couples;
         this.lines = lines;
         coordinates = mountEmptyBoard(line, column);
+        insertObstacles(couplesNum);
         insertRegistries(registries);
         generatePopulation(couplesNum, lines, offset);
     }
@@ -31,27 +45,49 @@ public class Board {
         coordinates = new String[width][height];
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                coordinates [y][x] = " . ";
+                coordinates [x][y] = " . ";
             }
         }
         return coordinates;
     }
 
-    //INSERE AS BARREIRAS (FALTA CARTÓRIO)
-    private void insertRegistries(int n) {
-
-        int res = couplesNum/2;
-        int y = (int)(Math.random() * res) + 1;
-
-        int slots [] = generateLines(n);
-        for (int i = 0; i < n; i++) {
-            int col = slots[i];
-            for (int j = y; j < y + (couplesNum/2); j++) {
+    private void insertObstacles(int couplesN){
+        int y = couplesN/2;
+        int high = y-1;
+        //System.out.println(res);
+        int col = 0;
+        for(double i = 0.2; i < 1; i += 0.2 ){
+            col = (int)(couplesN*i);
+            int res = rand.nextInt(high);
+            //System.out.println(col);
+            for(int j = res; j < res+y; j++){
                 coordinates[j][col] = " X ";
-                //printBoard();
             }
         }
+    }
 
+    private void insertRegistries(int r){
+        int remaining = r;
+        while(remaining != 0){
+            int x = rand.nextInt(couplesNum-1);
+            int y = rand.nextInt(couplesNum-1);
+            if(!coordinates[x][y].equals(" X ")){
+                if(verifyNearbyRegistry(x,y)){
+                    coordinates[x][y] = " R ";
+                    registryCoordinates.add(String.valueOf(y) + ";" + String.valueOf(x));
+                    remaining--;
+                }
+            }
+        }
+    }
+
+    private boolean verifyNearbyRegistry(int x, int y){
+        if((y -= 1) == -1) return false;
+        if((y += 1) == couplesNum) return false;
+
+        if(coordinates[x][y-1].equals(" X ")) return true;
+        if(coordinates[x][y+1].equals(" X ")) return true;
+        return false;
     }
 
     private int[] generateLines(int n) {
@@ -108,7 +144,7 @@ public class Board {
     }
 
     //VERIFICA SE O ESPAÇO É VÁLIDO
-    private boolean emptySpace(int x, int y){
+    public boolean emptySpace(int x, int y){
         if(BoardLimitsX(x) && BoardLimitsY(y)) {
             if (coordinates[y][x].equals(" . "))
                 return true;
@@ -129,7 +165,13 @@ public class Board {
         System.out.println("*****************");
         for (int y = 0; y < line; y++) {
             for (int x = 0; x < column; x++) {
-                System.out.printf("%s", coordinates[y][x]);
+                if(coordinates[y][x].equals(" . ")) System.out.printf(ANSI_BLACK + "%s", coordinates[y][x]);
+                else if(coordinates[y][x].equals(" R ")) System.out.printf(ANSI_GREEN + "%s", coordinates[y][x]);
+                else if(coordinates[y][x].equals(" X ")) System.out.printf(ANSI_RED + "%s",coordinates[y][x]);
+                else if(coordinates[y][x].equals(" M ")) System.out.printf(ANSI_BLUE + "%s", coordinates[y][x]);
+                else if(coordinates[y][x].equals(" F ")) System.out.printf(ANSI_PURPLE + "%s", coordinates[y][x]);
+                else if(coordinates[y][x].equals(" C ")) System.out.printf(ANSI_CYAN + "%s",coordinates[y][x]);
+                else System.out.printf(ANSI_RED + "%s",coordinates[y][x]);
             }
             System.out.println();
 
@@ -147,6 +189,7 @@ public class Board {
         AddDivorced();
         movePopulation(men);
         movePopulation(women);
+        RemoveBrokeCouples();
 
     }
 
@@ -210,10 +253,11 @@ public class Board {
     //GENERATE COUPLE AQUI
 
     private Couple generateCouple(Person p, Person w) {
-        p.setStatus("Married");
-        w.setStatus("Married");
+        p.setStatus("Engaged");
+        w.setStatus("Engaged");
         Couple c = new Couple(p, w);
         c.setPosition(p.getX(), p.getY());
+        p.setDestiny(ClosestRegistry(p.getX(), p.getY()));
         w.setPosition(p.getX(),p.getY());
         couples.add(c);
         women.remove(w);
@@ -252,7 +296,7 @@ public class Board {
             int y = p.getY();
             if (p.getGender().equals(" M ")) {
                 if (LookAround(p)) {
-                    String s = p.MoveToObjective();
+                    String s = p.MoveToObjective(this);
                     String xy[] = s.split("\\;");
                     int newX = Integer.parseInt(xy[0]);
                     int newY = Integer.parseInt(xy[1]);
@@ -281,41 +325,61 @@ public class Board {
         for (Couple c: couples
                 ) {
             if(c.getState().equals("Engaged")){
+                //SE ESTÁ AO LADO DO CARTÓRIO, ALTERA DA CONTINUE
+
+
+
                 //Faz o A* e dá Return;
-            }
-            Person p = c.getHusband();
-            int x = p.getX();
-            int y = p.getY();
-            if (p.getGender().equals(" M ")) {
-                if (LookAround(p)) {
-                    String s = p.MoveToObjective();
-                    String xy[] = s.split("\\;");
-                    int newX = Integer.parseInt(xy[0]);
-                    int newY = Integer.parseInt(xy[1]);
-                    newX = newX + x;
-                    newY = newY + y;
-                    if (emptySpace(newX, newY)) {
-                        ChangeMap(newX, newY, x, y, c.getInfo(), " . ");
-                        c.setPosition(newX, newY);
-                        p.setPosition(newX, newY);
-                        Person w = c.getWife();
-                        w.setPosition(newX, newY);
-
-                    } else {
-                        RandomMoveCouples(c);
-                    }
-
+                Person p = c.getHusband();
+                int x = p.getX();
+                int y = p.getY();
+                String s  = p.MoveToObjective(this);
+                String xy [] = s.split("\\;");
+                int newX = Integer.parseInt(xy[0]);
+                int newY = Integer.parseInt(xy[1]);
+                newX = newX + x;
+                newY = newY + y;
+                if (emptySpace(newX, newY)) {
+                    ChangeMap(newX, newY, x, y, c.getInfo(), " . ");
+                    c.setPosition(newX, newY);
+                    p.setPosition(newX, newY);
+                    c.getWife().setPosition(newX, newY);
                 } else {
                     RandomMoveCouples(c);
                 }
-            } else {
-                RandomMove(p);
-
+                return;
             }
 
-            Wait(80);
-        }
+            RandomMoveCouples(c);
 
+        }
+        Wait(80);
+    }
+
+
+
+    private String ClosestRegistry(int x, int y){
+
+        double weight = 100000;
+        String res = "";
+        for (String s: registryCoordinates) {
+
+            String parts[] = s.split("\\;");
+            int regX = Integer.parseInt(parts[0]);
+            int regY = Integer.parseInt(parts[1]);
+
+            int deltaX = Math.abs(x - regX);
+            int deltaY = Math.abs(y - regY);
+
+            double newWeight = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+            if(newWeight < weight){
+                weight = newWeight;
+                res = s;
+            }
+
+        }
+        return res;
     }
 
     private void RandomMoveCouples(Couple c) {
@@ -445,6 +509,14 @@ public class Board {
 
     private void RemoveBrokeCouples(){
 
+        Iterator<Couple> list = couples.iterator();
+
+        while(list.hasNext()){
+            Couple c = list.next();
+            if(c.getState().equals("Divorced")) list.remove();
+        }
+
+
     }
 
     private Person SearchWoman(int x, int y) {
@@ -472,5 +544,14 @@ public class Board {
         }
         //FIM VISUALIZAÇÃO.
 
+    }
+
+    public void printStatus() {
+        int n = 1;
+        for (Couple c: couples
+             ) {
+            System.out.printf("Casal %d: %s & %s\n", n, c.getHusband().getId(), c.getWife().getId() );
+            n++;
+        }
     }
 }
