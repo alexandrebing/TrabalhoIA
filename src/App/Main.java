@@ -27,18 +27,15 @@ public class Main {
 
         b.printBoard();
 
-        b.movePopulation();
-
-        b.printBoard();
-
         int n = 0;
 
-//        REPETE AS ACOES DA POPULAÇÃO NO MAPA
-//        while(n < 100) {
-//            clearScreen();
-//            b.printBoard();
-//            b.movePopulation();//ESSE METODO IDEALIZEI COMO O CENTRAL, ONDE A POPULAÇÃO VAI SE MOVER, VERIFICAR SE HÁ PARCEIROS DISPONÍVEIS, INICIAR O STRING MATCHING, MUDAR O ESTADO DA PESSOA.
-//        }
+       // REPETE AS ACOES DA POPULAÇÃO NO MAPA
+        while(n < 100) {
+            clearScreen();
+            b.printBoard();
+            b.movePopulation();//ESSE METODO IDEALIZEI COMO O CENTRAL, ONDE A POPULAÇÃO VAI SE MOVER, VERIFICAR SE HÁ PARCEIROS DISPONÍVEIS, INICIAR O STRING MATCHING, MUDAR O ESTADO DA PESSOA.
+            n++;
+        }
     }
 
     public static void clearScreen() {

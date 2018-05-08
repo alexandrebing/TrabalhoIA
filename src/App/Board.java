@@ -107,8 +107,10 @@ public class Board {
 
     //VERIFICA SE O ESPAÇO É VÁLIDO
     private boolean emptySpace(int x, int y){
-        if (coordinates[y][x].equals(" . "))
-            return true;
+        if(BoardLimitsX(x) && BoardLimitsY(y)) {
+            if (coordinates[y][x].equals(" . "))
+                return true;
+        }
         return false;
     }
 
@@ -131,29 +133,61 @@ public class Board {
     public void movePopulation() {
 
         movePopulation(men);
+        movePopulation(women);
 
     }
 
     private void movePopulation(ArrayList<Person> pop) {
         for (Person p: pop
              ) {
-            if(LookAround(p)){
-                int x = p.getX();
-                int y = p.getY();
-                String s = p.getDestiny();
-                String xy [] = s.split(";");
-                int newX = Integer.parseInt(xy[0]);
-                int newY = Integer.parseInt(xy[1]);
-                if(emptySpace(newY, newY)) {
-                    p.MoveToObjective();
-                    coordinates[newY][newX] = p.getGender();
-                    coordinates[y][x] = " . ";
+            int x = p.getX();
+            int y = p.getY();
+            if (p.getGender().equals(" M ")) {
+                if (LookAround(p)) {
+                    String s = p.MoveToObjective();
+                    String xy[] = s.split("\\;");
+                    int newX = Integer.parseInt(xy[0]);
+                    int newY = Integer.parseInt(xy[1]);
+                    newX = newY + x;
+                    newY = newY + y;
+                    if (emptySpace(newX, newY)) {
+                        p.setPosition(newX, newY);
+                        coordinates[newY][newX] = p.getGender();
+                        coordinates[y][x] = " . ";
+                    }
+
+                } else {
+                    RandomMove(p);
                 }
+            } else {
+                RandomMove(p);
 
             }
 
+            Wait(100);
         }
     }
+
+    private void RandomMove(Person p) {
+        int attempts = 0;
+        while(attempts < 9) {
+            int x = p.getX();
+            int y = p.getY();
+            String[] xy = p.RandomMove().split("\\;");
+            int newX = Integer.parseInt(xy[0]);
+            int newY = Integer.parseInt(xy[1]);
+            newX = newX + x;
+            newY = newY + y;
+            if (emptySpace(newX, newY)) {
+                p.setPosition(newX, newY);
+                coordinates[newY][newX] = p.getGender();
+                coordinates[y][x] = " . ";
+                return;
+            }
+            attempts++;
+        }
+    }
+
 
     //GARANTE QUE UMA NOVA COORDENADA NÃO VAI EXCEDER O TAMANHO DA MATRIZ OU TER VALOR NEGATIVO.
     private int checkLimits(int n, int size) {
@@ -177,13 +211,14 @@ public class Board {
     public boolean FoundDestiny(Person p, String o){
         int x = p.getX();
         int y = p.getY();
-        int visibleAreas [] = {x-1, x, x + 1, y -1 , y, y + 1,};
 
-        for (int i = x - 1; i <= x + 1; i++) {
-            for (int j = y - 1; j <= y + 1 ; j++) {
-                if(i != x || j != y){
+        for (int i = x - 2; i <= x + 2; i++) {
+            for (int j = y - 2; j <= y + 2 ; j++) {
+                int distX = Math.abs(i - x);
+                int distY = Math.abs(j - y);
+                if(distX > 1 || distY > 1){
                     if (VerifyObjective(i, j, o)){
-                        String destiny = x + ";" + y;
+                        String destiny = i + ";" + j;
                         p.setDestiny(destiny);
                         return true;
                     }
