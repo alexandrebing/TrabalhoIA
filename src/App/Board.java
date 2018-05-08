@@ -40,13 +40,15 @@ public class Board {
     //INSERE AS BARREIRAS (FALTA CARTÓRIO)
     private void insertRegistries(int n) {
 
-        int y = (int)(Math.random() * (couplesNum/2)) + 1;
+        int res = couplesNum/2;
+        int y = (int)(Math.random() * res) + 1;
 
         int slots [] = generateLines(n);
         for (int i = 0; i < n; i++) {
             int col = slots[i];
             for (int j = y; j < y + (couplesNum/2); j++) {
-                coordinates[j][col] = "[ ]";
+                coordinates[j][col] = " X ";
+                //printBoard();
             }
         }
 
@@ -139,6 +141,7 @@ public class Board {
     //MOVIMENTA A POPULAÇÃO
     public void movePopulation() {
 
+        MoveCouples(couples);
         Interact(men);
         RemoveMarriedMan();
         AddDivorced();
@@ -183,10 +186,12 @@ public class Board {
         if(s.matches(p, w)){
             Couple c = generateCouple(p, w);
             Person castOut = dissolveCouple(breakingUp, 0);;
-            castOut.setStatus("Single");
+            castOut.setStatus("Divorced");
             castOut.setActualParterPriority(0);
             ChangeMap(p.getX(), p.getY(), x, y, c.getInfo(), castOut.getGender());
             //CASA, MUDA ESTADO, ETC.
+        } else{
+            p.setActualParterPriority(0);
         }
 
     }
@@ -197,6 +202,8 @@ public class Board {
             Couple c = generateCouple(p,w);
             ChangeMap(p.getX(), p.getY(), x, y, c.getInfo(), " . ");
             //CASA, MUDA ESTADO, ETC.
+        } else {
+            p.setActualParterPriority(0);
         }
     }
 
@@ -206,8 +213,7 @@ public class Board {
         p.setStatus("Married");
         w.setStatus("Married");
         Couple c = new Couple(p, w);
-        c.setX(p.getX());
-        c.setY(p.getY());
+        c.setPosition(p.getX(), p.getY());
         w.setPosition(p.getX(),p.getY());
         couples.add(c);
         women.remove(w);
@@ -250,12 +256,13 @@ public class Board {
                     String xy[] = s.split("\\;");
                     int newX = Integer.parseInt(xy[0]);
                     int newY = Integer.parseInt(xy[1]);
-                    newX = newY + x;
+                    newX = newX + x;
                     newY = newY + y;
                     if (emptySpace(newX, newY)) {
+                        ChangeMap(newX, newY, x, y, p.getGender(), " . ");
                         p.setPosition(newX, newY);
-                        coordinates[newY][newX] = p.getGender();
-                        coordinates[y][x] = " . ";
+                    } else {
+                        RandomMove(p);
                     }
 
                 } else {
@@ -266,7 +273,71 @@ public class Board {
 
             }
 
-            Wait(100);
+            Wait(80);
+        }
+    }
+
+    private void MoveCouples(ArrayList <Couple> couples){
+        for (Couple c: couples
+                ) {
+            if(c.getState().equals("Engaged")){
+                //Faz o A* e dá Return;
+            }
+            Person p = c.getHusband();
+            int x = p.getX();
+            int y = p.getY();
+            if (p.getGender().equals(" M ")) {
+                if (LookAround(p)) {
+                    String s = p.MoveToObjective();
+                    String xy[] = s.split("\\;");
+                    int newX = Integer.parseInt(xy[0]);
+                    int newY = Integer.parseInt(xy[1]);
+                    newX = newX + x;
+                    newY = newY + y;
+                    if (emptySpace(newX, newY)) {
+                        ChangeMap(newX, newY, x, y, c.getInfo(), " . ");
+                        c.setPosition(newX, newY);
+                        p.setPosition(newX, newY);
+                        Person w = c.getWife();
+                        w.setPosition(newX, newY);
+
+                    } else {
+                        RandomMoveCouples(c);
+                    }
+
+                } else {
+                    RandomMoveCouples(c);
+                }
+            } else {
+                RandomMove(p);
+
+            }
+
+            Wait(80);
+        }
+
+    }
+
+    private void RandomMoveCouples(Couple c) {
+        Person p = c.getHusband();
+        int attempts = 0;
+        while(attempts < 9) {
+            int x = p.getX();
+            int y = p.getY();
+            String[] xy = p.RandomMove().split("\\;");
+            int newX = Integer.parseInt(xy[0]);
+            int newY = Integer.parseInt(xy[1]);
+            newX = newX + x;
+            newY = newY + y;
+            if (emptySpace(newX, newY)) {
+                c.setPosition(newX, newY);
+                Person w = c.getWife();
+                w.setPosition(newX, newY);
+                p.setPosition(newX, newY);
+                ChangeMap(newX, newY, x, y, c.getInfo(), " . ");;
+                return;
+            }
+            attempts++;
         }
     }
 
@@ -282,8 +353,7 @@ public class Board {
             newY = newY + y;
             if (emptySpace(newX, newY)) {
                 p.setPosition(newX, newY);
-                coordinates[newY][newX] = p.getGender();
-                coordinates[y][x] = " . ";
+                ChangeMap(newX, newY, x, y, p.getGender(), " . ");;
                 return;
             }
             attempts++;
@@ -366,7 +436,7 @@ public class Board {
         while(list.hasNext()){
             Couple c = list.next();
             Person p = c.getHusband();
-            if(p.getState().equals("Single")){
+            if(p.getState().equals("Divorced")){
                 men.add(p);
                 list.remove();
             }
