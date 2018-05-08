@@ -45,6 +45,14 @@ public class Couple {
                 "Mulher: %s\n\n", husband.getId(), wife.getId());
     }
 
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
     public int posX(){
         return this.x;
     }

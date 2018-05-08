@@ -7,7 +7,6 @@ public class Person {
     private int id, actualParterPriority,  posX, posY;
     private String gender, state;
     private String destiny;
-    private String coordinates;
     private ArrayList<Integer> preferences = new ArrayList<>();
 
     public Person(int id, String gender, String state) {
@@ -54,10 +53,8 @@ public class Person {
     }
 
     public void setPosition(int x, int y){
-
         posX = x;
         posY = y;
-        coordinates = x + ";" + y;
     }
 
     public String RandomMove(){
@@ -76,10 +73,6 @@ public class Person {
             default: return "0;0";
         }
 
-    }
-
-    public String getCoordinates() {
-        return coordinates;
     }
 
     public void setPreferences(ArrayList<Integer> preferences) {
@@ -110,17 +103,14 @@ public class Person {
         this.state = newStatus;
     }
 
-    public String MoveToObjective(String s) {
+    public String MoveToObjective() {
 
-        String pos [] = this.coordinates.split(";");
-        int x = Integer.parseInt(pos[0]);
-        int y = Integer.parseInt(pos[1]);
-        pos = this.destiny.split(";");
+        String pos [] = this.destiny.split(";");
         int destX = Integer.parseInt(pos[0]);
         int destY = Integer.parseInt(pos[1]);
 
-        int diffX = destX - x; //Será +2, -2 ou 0
-        int diffY = destY - y; //Será +2, -2 ou 0
+        int diffX = destX - posX; //Será +2, -2 ou 0
+        int diffY = destY - posY; //Será +2, -2 ou 0
 
         diffX = correctMove(diffX);
         diffY = correctMove(diffY);
