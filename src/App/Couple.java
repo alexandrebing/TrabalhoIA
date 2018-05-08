@@ -1,5 +1,3 @@
-package App;
-
 public class Couple {
 
     private Person husband, wife;

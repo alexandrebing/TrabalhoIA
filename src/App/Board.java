@@ -1,30 +1,43 @@
-package App;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Random;
 
 public class Board {
 
+    private static final String ANSI_RESET = "\u001B[0m";
+    private static final String ANSI_BLACK = "\u001B[30m";
+    private static final String ANSI_RED = "\u001B[31m";
+    private static final String ANSI_GREEN = "\u001B[32m";
+    private static final String ANSI_YELLOW = "\u001B[33m";
+    private static final String ANSI_BLUE = "\u001B[34m";
+    private static final String ANSI_PURPLE = "\u001B[35m";
+    private static final String ANSI_CYAN = "\u001B[36m";
+    private static final String ANSI_WHITE = "\u001B[37m";
+
     private int line, column;
     private String coordinates[][];
+    private Random rand = new Random();
     private ArrayList <Person> men = new ArrayList<>();
     private ArrayList <Person> women = new ArrayList<>();
     private ArrayList <Couple> couples = new ArrayList<>();
+    private ArrayList<String> lines, registryCoordinates = new ArrayList<>();
     private StringMatching s = new StringMatching();
     private int couplesN;
-
+    
 
     //CRIA MAPA   (CAMPO + BARREIRAS + POPULAÇÃO)
-    public Board (int line, int column, int couplesN, int registries){
-        this.line = line;
-        this.column = column;
-        this.couplesN = couplesN;
+    public Board (int couples, int registries, ArrayList<String> lines, String offset){
+        this.line = couples;
+        this.column = couples;
+        this.couplesN = couples;
+        this.lines = lines;
         coordinates = mountEmptyBoard(line, column);
+        insertObstacles(couplesN);
         insertRegistries(registries);
-        generatePopulation(couplesN);
-        generatePrioritiesList();
+        generatePopulation();
+        //generatePrioritiesList();
     }
 
     //MONTA MAPA INICIAL SEM ESTRUTURAS
@@ -37,9 +50,50 @@ public class Board {
         }
         return coordinates;
     }
+    
+    private void insertObstacles(int couplesN){
+        int y = couplesN/2;
+        int high = y-1;
+        //System.out.println(res);
+        int col = 0;
+        for(double i = 0.2; i < 1; i += 0.2 ){
+            col = (int)(couplesN*i);
+            int res = rand.nextInt(high);
+            //System.out.println(col);
+            for(int j = res; j < res+y; j++){
+                coordinates[j][col] = " X ";
+            }
+        }
+    }
+    
+    
+    
+    private void insertRegistries(int r){
+        int remaining = r;
+        while(remaining != 0){
+            int x = rand.nextInt(couplesN-1);
+            int y = rand.nextInt(couplesN-1);
+            if(!coordinates[x][y].equals(" X ")){
+                if(verifyNearbyRegistry(x,y)){
+                    coordinates[x][y] = " C ";
+                    registryCoordinates.add(String.valueOf(x) + "," + String.valueOf(y));
+                    remaining--;
+                }
+            }
+        }
+    }
+    
+    private boolean verifyNearbyRegistry(int x, int y){
+        if((y -= 1) == -1) return false;
+        if((y += 1) == couplesN) return false;
+        
+        if(coordinates[x][y-1].equals(" X ")) return true;
+        if(coordinates[x][y+1].equals(" X ")) return true;
+        return false;
+    }
 
     //INSERE AS BARREIRAS (FALTA CARTÓRIO)
-    private void insertRegistries(int n) {
+    /*private void insertRegistries(int n) {
         boolean validColumn = false;
         int randomY, randomX = 0;
         int index = 0;
@@ -80,7 +134,7 @@ public class Board {
                 randomY ++;
             }
         }
-    }
+    }*/
 
     //VERIFICAÇÃO PARA IMPEDIR BARREIRAS NA MESMA COLUNA
     private boolean isValidColumn(int randomX, int[] usedColumns) {
@@ -90,22 +144,54 @@ public class Board {
         }
         return true;
     }
-
+    
     //GERA POPULAÇÃO INICIAL (A MODIFICAR)
-    private void generatePopulation(int couples) {
+    /*private void generatePopulation(int couples) {
 
         generatePopulation(couples, " M ", men);
         generatePopulation(couples, " F ", women);
 
+    }*/
+    
+    private void generatePopulation(){
+        String offset[];
+        String preferences[];
+        Person p;
+        for(int i = 0; i < lines.size()/2; i++){
+            p = new Person(i, " M ", "Single");
+            offset = lines.get(i).split("   ");
+            preferences = offset[1].split("  ");
+            for(int j = 0; j < preferences.length; j++) {
+                p.addPreferences(Integer.parseInt(preferences[j].trim()));
+            }
+            for(int j = 0; j < registryCoordinates.size(); j++) {
+                p.addRegistry(registryCoordinates.get(j));
+            }
+            men.add(p);
+            insertOnBoard(p);
+        }
+        
+        for(int i = lines.size()/2+1; i < lines.size(); i++){
+            p = new Person(i, " F ", "Single");
+            offset = lines.get(i).split("   ");
+            preferences = offset[1].split("  ");
+            for(int j = 0; j < preferences.length; j++) {
+                p.addPreferences(Integer.parseInt(preferences[j].trim()));
+            }
+            for(int j = 0; j < registryCoordinates.size(); j++) {
+                p.addRegistry(registryCoordinates.get(j));
+            }
+            insertOnBoard(p);
+        }
     }
 
-    private void generatePopulation(int couples, String s, ArrayList<Person> a){
+    /*private void generatePopulation(int couples, String s, ArrayList<Person> a){
         for (int i = 1; i <= couples; i++) {
             Person p = new Person(i, s,"Single");
             a.add(p);
             insertOnBoard(p);
         }
-    }
+    }*/
 
     private void generatePrioritiesList(){
 
@@ -150,13 +236,14 @@ public class Board {
         return false;
     }
 
-    //IMPRIME O MAPA EM SEU ETADO ATUAL
+    //IMPRIME O MAPA EM SEU ESTADO ATUAL
     public boolean printBoard(){
 
         System.out.println("*****************");
         for (int x = 0; x < line; x++) {
             for (int y = 0; y < column; y++) {
-
+		// AQUI SERÁ INSERIDO UM SWITCH/IF QUE IMPRIME COLORAÇÃO POR TIPO
+		// EXEMPLO DE PRINT DE COR VERMELHA: System.out.printf(ANSI_RED + "%s", element);
                 String element = getQuadrant(x, y);
                 System.out.printf("%s", element);
             }

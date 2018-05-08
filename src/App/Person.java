@@ -1,5 +1,3 @@
-package App;
-
 import java.util.ArrayList;
 
 public class Person {
@@ -9,6 +7,7 @@ public class Person {
     private String destiny;
     private String coordinates;
     private ArrayList<Integer> preferences = new ArrayList<>();
+    private ArrayList<String> registryCoordinates = new ArrayList<>();
 
     public Person(int id, String gender, String state) {
         this.id = id;
@@ -39,6 +38,14 @@ public class Person {
 
     public String getDestiny() {
         return destiny;
+    }
+    
+    public void addPreferences(int n){
+        preferences.add(n);
+    }
+    
+    public void addRegistry(String c){
+        registryCoordinates.add(c);
     }
 
     public void setDestiny(String destiny) {
