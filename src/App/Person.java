@@ -140,20 +140,11 @@ public class Person {
             }
         }
 
-        int diffX = destX - x; //Será +2, -2 ou 0
-        int diffY = destY - y; //Será +2, -2 ou 0
-
-        diffX = correctMove(diffX);
-        diffY = correctMove(diffY);
+        int diffX = x - nextX; //Será +2, -2 ou 0
+        int diffY = y - nextY; //Será +2, -2 ou 0
 
         return diffX + ";" + diffY;
 
-    }
-
-    private int correctMove(int d) {
-        if (d == 2) return 1;
-        if (d == -2) return -1;
-        else return 0;
     }
 
     public double heuristica(int XAtual, int YAtual, int XFinal, int YFinal) {
