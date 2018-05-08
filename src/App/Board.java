@@ -230,7 +230,7 @@ public class Board {
     }
 
     //VERIFICA SE O ESPAÇO É VÁLIDO
-    private boolean emptySpace(int x, int y){
+    public boolean emptySpace(int x, int y){
         if (coordinates[y][x].equals(" . "))
             return true;
         return false;
@@ -293,7 +293,7 @@ public class Board {
                     MovingPerson(p, xPos, yPos, pos);
                 }
                 else{
-                    pos = p.MoveToObjective();//retorna o caminho a seguir
+                    pos = p.MoveToObjective(this);//retorna o caminho a seguir
 
                     if(!MovingPerson(p, xPos, yPos, pos)){//move a pessoa, se não conseguir entra no if
                         //Aqui vai o para o algoritmo A*

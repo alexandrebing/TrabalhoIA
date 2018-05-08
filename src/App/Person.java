@@ -117,7 +117,7 @@ public class Person {
         this.state = newStatus;
     }
 
-    public String MoveToObjective() {
+    public String MoveToObjective(Board board) {
 
         String pos [] = this.coordinates.split(";");
         int x = Integer.parseInt(pos[0]);
@@ -128,11 +128,12 @@ public class Person {
 
         int nextX = x - 1;
         int nextY = y - 1;
-        int nota = heuristica(nextX,nextY,destX,destY);
+        double nota = heuristica(nextX,nextY,destX,destY);
+        double nota_atual = nota;
         for(int x_atual = x - 1; nextX < x + 2; nextX++){
             for(int y_atual = y - 1; nextY < y + 2; nextY++){
                 nota_atual = heuristica(x_atual,y_atual,destX,destY);
-                if(nota_atual > nota){
+                if(nota_atual > nota && board.emptySpace(x_atual,y_atual)){
                     nextX = x_atual;
                     nextY = y_atual;
                 }
@@ -155,7 +156,7 @@ public class Person {
         else return 0;
     }
 
-    public int heuristica(int XAtual, int YAtual, int XFinal, int YFinal) {
+    public double heuristica(int XAtual, int YAtual, int XFinal, int YFinal) {
         int deltaX = Math.abs(XAtual - XFinal);
         int deltaY = Math.abs(YAtual - YFinal);
         
