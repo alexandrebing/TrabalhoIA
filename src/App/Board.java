@@ -1,4 +1,4 @@
-import java.util.ArrayList;
+﻿import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -242,9 +242,13 @@ public class Board {
         System.out.println("*****************");
         for (int x = 0; x < line; x++) {
             for (int y = 0; y < column; y++) {
-		// AQUI SERÁ INSERIDO UM SWITCH/IF QUE IMPRIME COLORAÇÃO POR TIPO
-		// EXEMPLO DE PRINT DE COR VERMELHA: System.out.printf(ANSI_RED + "%s", element);
-                String element = getQuadrant(x, y);
+		String element = getQuadrant(x, y);
+		if(element.equals(" . ")) System.out.printf(ANSI_BLACK + "%s", element);
+                else if(element.equals(" R ")) System.out.printf(ANSI_GREEN + "%s", element);
+                else if(element.equals(" X ")) System.out.printf(ANSI_RED + "%s", element);
+                else if(element.equals(" M ")) System.out.printf(ANSI_BLUE + "%s", element);
+                else if(element.equals(" F ")) System.out.printf(ANSI_PURPLE + "%s", element);
+                else System.out.printf(ANSI_RED + "%s", element);
                 System.out.printf("%s", element);
             }
             System.out.println();
