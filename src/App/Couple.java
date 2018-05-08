@@ -3,13 +3,18 @@ package App;
 public class Couple {
 
     private Person husband, wife;
-    private String info, coordinates, destiny;
+    private String info, coordinates, state;
     private int x, y;
 
     public Couple(Person husband, Person wife){
         this.husband = husband;
         this.wife = wife;
         this.info = " C ";
+        this.state = getHusband().getState();
+    }
+
+    public void setState(String state) {
+        this.state = state;
     }
 
     public Person getHusband() {
@@ -35,10 +40,6 @@ public class Couple {
         return coordinates;
     }
 
-    public String getDestiny() {
-        return destiny;
-    }
-
     public void printCouple(){
         System.out.printf("Casal\n" +
                 "Marido: %s\n" +
@@ -51,6 +52,14 @@ public class Couple {
 
     public void setY(int y) {
         this.y = y;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
     }
 
     public int posX(){

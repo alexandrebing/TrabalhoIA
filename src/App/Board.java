@@ -114,6 +114,13 @@ public class Board {
         return false;
     }
 
+    private void ChangeMap(int x, int y, int oldX, int oldY, String entering, String leaving) {
+        if (BoardLimitsX(x) && BoardLimitsY(y)) {
+            coordinates[y][x] = entering;
+            coordinates[oldY][oldX] = leaving;
+        }
+    }
+
     //IMPRIME O MAPA EM SEU ETADO ATUAL
     public boolean printBoard(){
 
@@ -132,9 +139,104 @@ public class Board {
     //MOVIMENTA A POPULAÇÃO
     public void movePopulation() {
 
+        Interact(men);
+        RemoveMarriedMan();
+        AddDivorced();
         movePopulation(men);
         movePopulation(women);
 
+    }
+
+    private void Interact(ArrayList<Person> men) {
+        String objective1 = " F ";
+        String objective2 = " C ";
+        int x, y;
+        for (Person m: men
+             ) {
+            x = m.getX();
+            y = m.getY();
+            InteractionLoop(m, x, y, objective1, objective2);
+
+        }
+
+    }
+
+    private void InteractionLoop(Person p, int x, int y, String objective1, String objective2){
+        for (int i = x - 1; i <= x + 1 ; i++) {
+            for (int j = y; j <= y+1 ; j++) {
+                if(i != x || j!= y){
+                    if(VerifyObjective(i,j, objective1)){
+                        ProposeSingle(p, i, j);
+                    }
+                    else if(VerifyObjective(i, j, objective2)){
+                        ProposeCouple(p, i, j);
+                    }
+                }
+            }
+        }
+    }
+
+    private void ProposeCouple(Person p, int x, int y) {
+
+        Couple breakingUp = SearchCouple(x,y);
+        Person w = breakingUp.getWife();
+        if(s.matches(p, w)){
+            Couple c = generateCouple(p, w);
+            Person castOut = dissolveCouple(breakingUp, 0);;
+            castOut.setStatus("Single");
+            castOut.setActualParterPriority(0);
+            ChangeMap(p.getX(), p.getY(), x, y, c.getInfo(), castOut.getGender());
+            //CASA, MUDA ESTADO, ETC.
+        }
+
+    }
+
+    private void ProposeSingle(Person p, int x, int y){
+        Person w = SearchWoman(x,y);
+        if(s.matches(p,w)){
+            Couple c = generateCouple(p,w);
+            ChangeMap(p.getX(), p.getY(), x, y, c.getInfo(), " . ");
+            //CASA, MUDA ESTADO, ETC.
+        }
+    }
+
+    //GENERATE COUPLE AQUI
+
+    private Couple generateCouple(Person p, Person w) {
+        p.setStatus("Married");
+        w.setStatus("Married");
+        Couple c = new Couple(p, w);
+        c.setX(p.getX());
+        c.setY(p.getY());
+        w.setPosition(p.getX(),p.getY());
+        couples.add(c);
+        women.remove(w);
+        return c;
+    }
+
+    //DISSOLVE COUPLE AQUI
+
+    private Person dissolveCouple(Couple c, int sex) {
+        Person p;
+        if(sex == 0){
+            p = c.getHusband();
+
+        } else{
+            p = c.getWife();
+        }
+        c.setState("Divorced");
+        return p;
+    }
+
+    private Couple SearchCouple(int x, int y) {
+        for (Couple c: couples
+                ) {
+            if(x == c.getX() && y == c.getY()){
+                return c;
+            }
+
+        }
+        return null;
     }
 
     private void movePopulation(ArrayList<Person> pop) {
@@ -247,36 +349,6 @@ public class Board {
         return (y >= 0 && y < line);
     }
 
-
-    private Person dissolveCouple(Couple c) {
-        Person p = c.getHusband();
-        couples.remove(c);
-        return p;
-    }
-
-    private Couple SearchCouple(String cCoordinates) {
-        for (Couple c: couples
-             ) {
-            if(c.getCoordinates().equals(cCoordinates)){
-                return c;
-            }
-
-        }
-        return null;
-    }
-
-    private void generateCouple(Person p, Person w) {
-        Couple c = new Couple(p, w);
-        p.setStatus("Married");
-        w.setStatus("Married");
-        c.setX(p.getX());
-        c.setY(p.getY());
-//        p.setPosition(-1,-1);
-//        w.setPosition(-1,-1);
-        couples.add(c);
-        women.remove(w);
-    }
-
     private void RemoveMarriedMan(){
         Iterator<Person> list = men.iterator();
 
@@ -285,6 +357,23 @@ public class Board {
             if(p.getState().equals("Married")) list.remove();
             else if (p.getState().equals("Engaged")) list.remove();
         }
+
+    }
+
+    private void AddDivorced(){
+        Iterator<Couple> list = couples.iterator();
+
+        while(list.hasNext()){
+            Couple c = list.next();
+            Person p = c.getHusband();
+            if(p.getState().equals("Single")){
+                men.add(p);
+                list.remove();
+            }
+        }
+    }
+
+    private void RemoveBrokeCouples(){
 
     }
 

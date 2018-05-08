@@ -30,12 +30,13 @@ public class Main {
         int n = 0;
 
        // REPETE AS ACOES DA POPULAÇÃO NO MAPA
-        while(n < 100) {
+        while(n < 20) {
             clearScreen();
             b.printBoard();
             b.movePopulation();//ESSE METODO IDEALIZEI COMO O CENTRAL, ONDE A POPULAÇÃO VAI SE MOVER, VERIFICAR SE HÁ PARCEIROS DISPONÍVEIS, INICIAR O STRING MATCHING, MUDAR O ESTADO DA PESSOA.
             n++;
         }
+        b.printBoard();
     }
 
     public static void clearScreen() {
