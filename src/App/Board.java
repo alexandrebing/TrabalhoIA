@@ -293,8 +293,9 @@ public class Board {
                     MovingPerson(p, xPos, yPos, pos);
                 }
                 else{
-                    pos = p.MoveToObjective(p.getDestiny());
-                    if(!MovingPerson(p, xPos, yPos, pos)){
+                    pos = p.MoveToObjective();//retorna o caminho a seguir
+
+                    if(!MovingPerson(p, xPos, yPos, pos)){//move a pessoa, se não conseguir entra no if
                         //Aqui vai o para o algoritmo A*
                     }
                 }

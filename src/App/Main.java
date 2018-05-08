@@ -11,7 +11,7 @@ public class Main {
         //CRIA O MAPA - FALTA PEGAR O TXT DA ENTRADA E USAR COMO PARAMETRO PARA CONSTRUÇÃO DO MAPA, E MANDAR O RESTO PARA CRIAR AS PESSOAS.
         Scanner in = new Scanner (new File("30Casais.txt"));
         String offset = "   ";
-        ArrayList<String> lines = new ArrayList();
+        ArrayList<String> lines = new ArrayList<>();
         System.out.println("Simulação:\n 1 - 10 casais\n 2 - 30 casais\n 3 - 50 casais");
         while(in.hasNextLine()){
             lines.add(in.nextLine());

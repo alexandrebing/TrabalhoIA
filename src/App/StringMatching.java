@@ -9,8 +9,7 @@ public class StringMatching {
         ArrayList<Integer> preferences = m.getPreferences();
         int pretenderRate = preferences.size();
         //BUSCA PREFERENCIAS DO HOMEM
-        for (int n: preferences
-             ) {
+        for (int n: preferences) {
             if(f.getId() == n) break;
             pretenderRate --;
         }

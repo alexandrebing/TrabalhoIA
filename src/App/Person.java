@@ -117,7 +117,7 @@ public class Person {
         this.state = newStatus;
     }
 
-    public String MoveToObjective(String s) {
+    public String MoveToObjective() {
 
         String pos [] = this.coordinates.split(";");
         int x = Integer.parseInt(pos[0]);
@@ -125,6 +125,19 @@ public class Person {
         pos = this.destiny.split(";");
         int destX = Integer.parseInt(pos[0]);
         int destY = Integer.parseInt(pos[1]);
+
+        int nextX = x - 1;
+        int nextY = y - 1;
+        int nota = heuristica(nextX,nextY,destX,destY);
+        for(int x_atual = x - 1; nextX < x + 2; nextX++){
+            for(int y_atual = y - 1; nextY < y + 2; nextY++){
+                nota_atual = heuristica(x_atual,y_atual,destX,destY);
+                if(nota_atual > nota){
+                    nextX = x_atual;
+                    nextY = y_atual;
+                }
+            }
+        }
 
         int diffX = destX - x; //Será +2, -2 ou 0
         int diffY = destY - y; //Será +2, -2 ou 0
@@ -140,6 +153,13 @@ public class Person {
         if (d == 2) return 1;
         if (d == -2) return -1;
         else return 0;
+    }
+
+    public int heuristica(int XAtual, int YAtual, int XFinal, int YFinal) {
+        int deltaX = Math.abs(XAtual - XFinal);
+        int deltaY = Math.abs(YAtual - YFinal);
+        
+        return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     }
 
     public int getX(){
