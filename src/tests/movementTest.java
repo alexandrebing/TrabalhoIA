@@ -1,11 +1,9 @@
-import org.junit.Test;
+package tests;
 
-import static org.junit.Assert.*;
 
 public class movementTest {
 
     public static void main(String[] args) {
-
 
         int matrix [][] = {{1,2,3},
                            {4,5,6},

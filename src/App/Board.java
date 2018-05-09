@@ -189,7 +189,7 @@ public class Board {
         AddDivorced();
         movePopulation(men);
         movePopulation(women);
-        RemoveBrokeCouples();
+        //RemoveBrokeCouples();
 
     }
 
@@ -274,7 +274,8 @@ public class Board {
         } else{
             p = c.getWife();
         }
-        c.setState("Divorced");
+        couples.remove(c);
+        //c.setState("Divorced");
         return p;
     }
 
@@ -344,16 +345,39 @@ public class Board {
                     c.setPosition(newX, newY);
                     p.setPosition(newX, newY);
                     c.getWife().setPosition(newX, newY);
+                    String objective = p.getDestiny();
+                    String parts [] = objective.split("\\;");
+                    int objX = Integer.parseInt(parts[0]);
+                    int objY = Integer.parseInt(parts[1]);
+                    if(InObjectiveNeighbor(newX, newY, objX, objY)){
+                        c.setState("Married");
+                        p.setStatus("Married");
+                        Person w = c.getWife();
+                        w.setStatus("Married");
+                    }
                 } else {
                     RandomMoveCouples(c);
                 }
-                return;
             }
 
             RandomMoveCouples(c);
 
         }
         Wait(80);
+    }
+
+    private Boolean InObjectiveNeighbor(int x, int y, int destX, int destY){
+
+        int distX = Math.abs(x - destX); // 1 ou 0
+        int distY = Math.abs(y - destY);// 1 ou 0
+
+
+        if(distX < 2 && distY < 2){
+            return true;
+        }
+
+        return false;
+
     }
 
 
@@ -507,17 +531,17 @@ public class Board {
         }
     }
 
-    private void RemoveBrokeCouples(){
-
-        Iterator<Couple> list = couples.iterator();
-
-        while(list.hasNext()){
-            Couple c = list.next();
-            if(c.getState().equals("Divorced")) list.remove();
-        }
-
-
-    }
+//    private void RemoveBrokeCouples(){
+//
+//        Iterator<Couple> list = couples.iterator();
+//
+//        while(list.hasNext()){
+//            Couple c = list.next();
+//            if(c.getState().equals("Divorced")) list.remove();
+//        }
+//
+//
+//    }
 
     private Person SearchWoman(int x, int y) {
         for (Person p: women
@@ -550,7 +574,7 @@ public class Board {
         int n = 1;
         for (Couple c: couples
              ) {
-            System.out.printf("Casal %d: %s & %s\n", n, c.getHusband().getId(), c.getWife().getId() );
+            System.out.printf("Casal %d: %s & %s\nState: %s\n", n, c.getHusband().getId(), c.getWife().getId(), c.getState());
             n++;
         }
     }
